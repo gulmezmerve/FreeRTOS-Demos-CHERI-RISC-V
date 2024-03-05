@@ -120,6 +120,7 @@
 
 #ifdef __CHERI_PURE_CAPABILITY__
     #include <cheri/cheri-utility.h>
+    #include <cheric.h>
 #endif
 
 /* UDP command server task parameters. */
@@ -352,8 +353,8 @@ static TaskHandle_t xServerWorkTaskHandle = NULL;
             size_t epc = 0;
             size_t cheri_cause;
 
-            asm volatile ( "csrr %0, mcause" : "=r" ( cause )::);
-            asm volatile ( "csrr %0, mepc" : "=r" ( epc )::);
+            __asm__ volatile ( "csrr %0, mcause" : "=r" ( cause )::);
+            __asm__ volatile ( "csrr %0, mepc" : "=r" ( epc )::);
 
             size_t ccsr = 0;
             asm volatile ( "csrr %0, mccsr" : "=r" ( ccsr )::);
@@ -385,8 +386,8 @@ static TaskHandle_t xServerWorkTaskHandle = NULL;
         size_t cause = 0;
         size_t epc = 0;
 
-        asm volatile ( "csrr %0, mcause" : "=r" ( cause )::);
-        asm volatile ( "csrr %0, mepc" : "=r" ( epc )::);
+        __asm__ volatile ( "csrr %0, mcause" : "=r" ( cause )::);
+        __asm__ volatile ( "csrr %0, mepc" : "=r" ( epc )::);
         printf( "mcause = %u\n", cause );
         printf( "mepc = %llx\n", epc );
 

@@ -111,7 +111,7 @@ void vToggleLED( void );
 #if __riscv_xlen == 64
     #define read_csr( reg )                                  \
     ( { unsigned long __tmp;                                 \
-        asm volatile ( "csrr %0, " # reg : "=r" ( __tmp ) ); \
+        __asm__ volatile ( "csrr %0, " # reg : "=r" ( __tmp ) ); \
         __tmp; } )
 #endif
 
@@ -124,7 +124,7 @@ uint64_t get_cycle_count( void )
         return read_csr( cycle );
     #else
         uint32_t cycle_lo, cycle_hi;
-        asm volatile (
+        __asm__ volatile (
             "%=:\n\t"
             "csrr %1, cycleh\n\t"
             "csrr %0, cycle\n\t"

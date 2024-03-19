@@ -1,0 +1,138 @@
+#-                                                                                                                                                                                                                                                                                                                [218/1103]# SPDX-License-Identifier: BSD-2-Clause
+#
+# Copyright (c) 2021 Hesham Almatary
+#
+# This software was developed by SRI International and the University of
+# Cambridge Computer Laboratory (Department of Computer Science and
+# Technology) under DARPA contract HR0011-18-C-0016 ("ECATS"), as part of the
+# DARPA SSITH research programme.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+
+
+import os
+import fnmatch
+import glob
+import shutil
+import subprocess
+import sys
+import ipaddress
+from os import path
+from subprocess import check_output
+from pathlib import Path
+from waflib.Task import Task
+from waflib.TaskGen import after, before_method, feature
+from waflib.TaskGen import extension
+
+top = '.'
+out = 'build'
+
+def configure(ctx):
+    print("Configuring CWE-457 Demo @", ctx.path.abspath())
+    
+    ctx.env.append_value(
+        'INCLUDES',
+        [
+            ctx.path.abspath() + "/",
+            ctx.path.abspath() + "/freertos/",
+            ctx.path.abspath() + "/testcasesupport/",
+        ])
+
+    ctx.env.append_value('DEFINES', [
+        'configPROG_ENTRY     = main',
+        'configCHERI_INT_MEMCPY = 0'
+    ])
+
+    ctx.env.append_value('EXPORT_DEFINES', [
+        'ipconfigUSE_FAT_LIBDL              = 1'
+    ])
+    
+    if ctx.env.COMPARTMENTALIZE:
+        ctx.env.append_value('LIB_DEPS_EMBED_FAT', ["CWE457_Use_of_Uninitialized_Variable__struct_array_declare_no_init_17", 
+                                                    "CWE457_Use_of_Uninitialized_Variable__char_pointer_01"])
+
+
+    ctx.define('configCHERI_VERBOSE_FAULT_INFO', 1)
+    ctx.define('configCHERI_STACK_TRACE', 1)
+    ctx.env.LIBDL_PROG_START_FILE = "main_CWE457_Use_of_Uninitialized_Variable.c"
+    
+    ctx.define('configLIBDL_PROG_START_OBJ', '/lib/lib'+ctx.env.PROG+'.a:'+ctx.env.LIBDL_PROG_START_FILE+'.1.o')
+    
+    # # ctx.env.append_value('LD_FLAGS', ['-lCWE457_Use_of_Uninitialized_Variable'])
+    
+    ctx.env.append_value(
+        'LIB_DEPS',
+        ['freertos_libdl'])
+
+
+
+def build(bld):
+    name = "CWE457_Use_of_Uninitialized_Variable"
+    print("Building CWE457_Use_of_Uninitialized_Variable")
+
+    cflags = []
+    
+
+    if bld.env.COMPARTMENTALIZE and bld.env.PURECAP:
+        cflags = ['-cheri-cap-table-abi=gprel']
+
+    if bld.env.COMPARTMENTALIZE and bld.env.ENABLE_MPU:
+        # To force emitting relocs for function pointers
+        cflags = ['-mcmodel=medlow']
+
+
+    ldlags=['-lCWE457_Use_of_Uninitialized_Variable']
+    
+    bld.stlib(
+        features=['c'],
+        cflags=bld.env.CFLAGS + cflags,
+        source=[
+            'io.c',
+            'CWE457_Use_of_Uninitialized_Variable__char_pointer_01.c'
+        ],
+        use=[
+            "freertos_core_headers", "freertos_bsp_headers","freertos_libdl_headers",
+        ],
+        target="CWE457_Use_of_Uninitialized_Variable__char_pointer_01") 
+    
+    bld.stlib(
+        features=['c'],
+        cflags=bld.env.CFLAGS + cflags,
+        source=[
+            'io.c',
+            'CWE457_Use_of_Uninitialized_Variable__struct_array_declare_no_init_17.c',
+        ],
+        use=[
+            "freertos_core_headers", "freertos_bsp_headers","freertos_libdl_headers"
+        ], 
+        target="CWE457_Use_of_Uninitialized_Variable__struct_array_declare_no_init_17")
+    
+    bld.stlib(
+        features=['c'],
+        cflags = bld.env.CFLAGS + cflags,
+        source=['main_CWE457_Use_of_Uninitialized_Variable.c'],
+        use=[
+            "freertos_core_headers", "freertos_bsp_headers", "freertos_tcpip_headers",
+            "freertos_libdl_headers","CWE457_Use_of_Uninitialized_Variable__char_pointer_01", "CWE457_Use_of_Uninitialized_Variable__struct_array_declare_no_init_17"
+        ],
+        target=name)

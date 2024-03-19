@@ -63,27 +63,22 @@ def configure(ctx):
         'configCHERI_INT_MEMCPY = 0'
     ])
 
-    ctx.env.append_value('EXPORT_DEFINES', [
-        'ipconfigUSE_FAT_LIBDL              = 1'
-    ])
     
-    if ctx.env.COMPARTMENTALIZE:
-        ctx.env.append_value('LIB_DEPS_EMBED_FAT', ["CWE457_Use_of_Uninitialized_Variable__struct_array_declare_no_init_17", 
-                                                    "CWE457_Use_of_Uninitialized_Variable__char_pointer_01"])
+    # if ctx.env.COMPARTMENTALIZE:
+    #     ctx.env.append_value('LIB_DEPS_EMBED_FAT', ["CWE457_Use_of_Uninitialized_Variable__struct_array_declare_no_init_17", 
+    #                                                 "CWE457_Use_of_Uninitialized_Variable__char_pointer_01"])
 
 
-    ctx.define('configCHERI_VERBOSE_FAULT_INFO', 1)
-    ctx.define('configCHERI_STACK_TRACE', 1)
+    # ctx.define('configCHERI_VERBOSE_FAULT_INFO', 1)
+    # ctx.define('configCHERI_STACK_TRACE', 1)
     ctx.env.LIBDL_PROG_START_FILE = "main_CWE457_Use_of_Uninitialized_Variable.c"
     
-    ctx.define('configLIBDL_PROG_START_OBJ', '/lib/lib'+ctx.env.PROG+'.a:'+ctx.env.LIBDL_PROG_START_FILE+'.1.o')
-    
+
     # # ctx.env.append_value('LD_FLAGS', ['-lCWE457_Use_of_Uninitialized_Variable'])
     
-    ctx.env.append_value(
-        'LIB_DEPS',
-        ['freertos_libdl'])
-
+    # ctx.env.append_value(
+    #     'LIB_DEPS',
+    #     ['freertos_libdl'])
 
 
 def build(bld):
@@ -108,31 +103,33 @@ def build(bld):
         cflags=bld.env.CFLAGS + cflags,
         source=[
             'io.c',
-            'CWE457_Use_of_Uninitialized_Variable__char_pointer_01.c'
+            'CWE457_Use_of_Uninitialized_Variable__char_pointer_01.c',
+            'main_CWE457_Use_of_Uninitialized_Variable.c',
+            'CWE457_Use_of_Uninitialized_Variable__struct_array_declare_no_init_17.c'
         ],
         use=[
-            "freertos_core_headers", "freertos_bsp_headers","freertos_libdl_headers",
+            "freertos_core_headers", "freertos_bsp_headers",
         ],
-        target="CWE457_Use_of_Uninitialized_Variable__char_pointer_01") 
+        target=name) 
     
-    bld.stlib(
-        features=['c'],
-        cflags=bld.env.CFLAGS + cflags,
-        source=[
-            'io.c',
-            'CWE457_Use_of_Uninitialized_Variable__struct_array_declare_no_init_17.c',
-        ],
-        use=[
-            "freertos_core_headers", "freertos_bsp_headers","freertos_libdl_headers"
-        ], 
-        target="CWE457_Use_of_Uninitialized_Variable__struct_array_declare_no_init_17")
+    # bld.stlib(
+    #     features=['c'],
+    #     cflags=bld.env.CFLAGS + cflags,
+    #     source=[
+    #         'io.c',
+    #         'CWE457_Use_of_Uninitialized_Variable__struct_array_declare_no_init_17.c',
+    #     ],
+    #     use=[
+    #         "freertos_core_headers", "freertos_bsp_headers","freertos_libdl_headers"
+    #     ], 
+    #     target="CWE457_Use_of_Uninitialized_Variable__struct_array_declare_no_init_17")
     
-    bld.stlib(
-        features=['c'],
-        cflags = bld.env.CFLAGS + cflags,
-        source=['main_CWE457_Use_of_Uninitialized_Variable.c'],
-        use=[
-            "freertos_core_headers", "freertos_bsp_headers", "freertos_tcpip_headers",
-            "freertos_libdl_headers","CWE457_Use_of_Uninitialized_Variable__char_pointer_01", "CWE457_Use_of_Uninitialized_Variable__struct_array_declare_no_init_17"
-        ],
-        target=name)
+    # bld.stlib(
+    #     features=['c'],
+    #     cflags = bld.env.CFLAGS + cflags,
+    #     source=['main_CWE457_Use_of_Uninitialized_Variable.c'],
+    #     use=[
+    #         "freertos_core_headers", "freertos_bsp_headers", "freertos_tcpip_headers",
+    #         "freertos_libdl_headers","CWE457_Use_of_Uninitialized_Variable__char_pointer_01", "CWE457_Use_of_Uninitialized_Variable__struct_array_declare_no_init_17"
+    #     ],
+    #     target=name)
